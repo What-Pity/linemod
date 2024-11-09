@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-zone_num=8 # 分区数量
+zone_num=5 # 分区数量
 zone_boundary=np.linspace(0,np.pi,zone_num+1) # 区域的边界，包括0和pi
 unit_angle=np.pi/zone_num
 magnitude_threshold=100 # 梯度幅值的阈值，大于该值认为是边缘
