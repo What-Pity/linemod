@@ -93,7 +93,7 @@ def extract_image_feature(image):
 def make_one_template(template_feature,maintain_shape=False):
     """根据模板的特征，空间采样，生成稀疏的特征，以及特征对应位置（适合linemod匹配）"""
     h,w=template_feature.shape[:2]
-    sample_rate=5 # sample_rate x sample_rate作为一个选区，求解众数，并赋值到中点，其他位置置零
+    sample_rate=10 # sample_rate x sample_rate作为一个选区，求解众数，并赋值到中点，其他位置置零
     result=np.zeros((h,w),dtype=int)
     for i in range(h//sample_rate):
         for j in range(w//sample_rate):
@@ -160,15 +160,17 @@ def compute_feature_similarity(response_maps,template_features,offsets,map_index
     return np.mean(similarity,axis=0)
 
 def decode_match_location(similaritys,threshold=0.8):
-    """根据计算得到的相似度，返回相似度超过阈值的位置（左上角坐标）"""
+    """根据计算得到的相似度，返回相似度超过阈值的位置（左上角坐标）和相应的角度序列号"""
     global IMAGE_WIDTH,spread_neibour
     _neibour_per_row=IMAGE_WIDTH//spread_neibour
     if similaritys.ndim==1:
-        _idx=np.where(similaritys>threshold)
-        return _idx[0]%_neibour_per_row*spread_neibour,_idx[0]//_neibour_per_row*spread_neibour
+        _location_idx=np.where(similaritys>threshold)[0]
+        if _location_idx.size==0: return None
+        return _location_idx%_neibour_per_row*spread_neibour,_location_idx//_neibour_per_row*spread_neibour
     elif similaritys.ndim==2:
-        _,_idx=np.where(similaritys>threshold)
-        return _idx[0]%_neibour_per_row*spread_neibour,_idx[0]//_neibour_per_row*spread_neibour
+        _angle_idx,_location_idx=np.where(similaritys>threshold)
+        if _location_idx.size==0: return None
+        return (_location_idx%_neibour_per_row*spread_neibour,_location_idx//_neibour_per_row*spread_neibour),_angle_idx
     else: raise ValueError("similaritys.ndim must be 1 or 2")
 
 if __name__ == '__main__':
